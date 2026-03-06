@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure ID — Campus Authentication</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .hero { text-align: center; }
+    .hero-icon {
+      font-size: 4rem;
+      margin-bottom: 24px;
+      display: block;
+      filter: drop-shadow(0 0 20px rgba(0, 168, 255, 0.4));
+    }
+    .hero h1 { font-size: 2.4rem; margin-bottom: 12px; }
+    .hero p  { color: var(--text-secondary); margin-bottom: 32px; font-size: 1.05rem; }
+    .btn-group { display: flex; flex-direction: column; gap: 12px; }
+    .feature-list {
+      margin: 32px 0 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .feature-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    .feature-list .icon {
+      color: var(--accent);
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="container">
+      <div class="card hero">
+        <span class="hero-icon">🔐</span>
+        <h1>Secure <span class="text-accent">ID</span></h1>
+        <p>Dynamic QR authentication for campus security.<br>No cloning. No screenshots. No replay attacks.</p>
+
+        <div class="btn-group">
+          <a href="login.html" class="btn btn-primary btn-full">
+            🎓 Student / Teacher Login
+          </a>
+          <a href="/scanner" class="btn btn-ghost btn-full">
+            📷 Scanner Interface
+          </a>
+        </div>
+
+        <ul class="feature-list">
+          <li><span class="icon">⏱</span> QR codes refresh every 30 seconds</li>
+          <li><span class="icon">🔒</span> HMAC-SHA256 encrypted tokens</li>
+          <li><span class="icon">🛡</span> Replay attack prevention</li>
+          <li><span class="icon">✅</span> Real-time server verification</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // If already logged in, redirect to dashboard
+    const token = localStorage.getItem('secure_id_token');
+    if (token) {
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+</body>
+</html>

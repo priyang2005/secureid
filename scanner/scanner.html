@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure ID — Scanner</title>
+  <link rel="stylesheet" href="scanner.css" />
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      🔐 Secure<span class="dot">ID</span> Scanner
+    </div>
+    <div class="topbar-info" id="scannerIdDisplay">DEVICE: ...</div>
+    <div class="topbar-status">
+      <div class="status-dot"></div>
+      <span id="topbarStatus">Ready</span>
+    </div>
+  </div>
+
+  <!-- Main layout -->
+  <div class="main">
+
+    <!-- Camera panel -->
+    <div class="camera-panel">
+
+      <!-- Permission request screen (shown before camera starts) -->
+      <div class="permission-screen" id="permissionScreen">
+        <div class="icon">📷</div>
+        <h2>Scanner Device</h2>
+        <p>This interface uses your device camera to scan Secure ID QR codes.</p>
+        <button class="btn-start" onclick="startScanner()">
+          📷 Start Camera
+        </button>
+        <p style="margin-top:8px;font-size:0.75rem;color:#3d5a7a;">Camera access is required</p>
+      </div>
+
+      <!-- Video feed -->
+      <div id="video-container" style="display:none;">
+        <video id="preview" playsinline autoplay muted></video>
+
+        <!-- Scan target overlay -->
+        <div class="scan-overlay">
+          <div class="scan-target">
+            <div class="scan-corner-br"></div>
+            <div class="scan-corner-bl"></div>
+            <div class="scan-line"></div>
+            <div class="scan-hint">ALIGN QR CODE HERE</div>
+          </div>
+        </div>
+
+        <!-- Result flash overlay -->
+        <div class="result-flash" id="resultFlash">
+          <div class="result-icon" id="flashIcon"></div>
+          <div class="result-word" id="flashWord"></div>
+          <div class="result-user" id="flashUser"></div>
+          <div class="result-sub"  id="flashSub"></div>
+        </div>
+      </div>
+
+    </div><!-- /camera-panel -->
+
+    <!-- Side panel -->
+    <div class="side-panel">
+
+      <!-- Current result -->
+      <div class="side-section">
+        <h3>Last Scan</h3>
+        <div class="result-card" id="resultCard">
+          <div class="idle-text">Waiting for scan...</div>
+        </div>
+      </div>
+
+      <!-- Access log -->
+      <div class="log-panel">
+        <div class="side-section" style="border-bottom:none;padding-bottom:8px;">
+          <h3>Access Log</h3>
+        </div>
+        <div class="log-list" id="logList">
+          <div class="log-empty">No scans yet</div>
+        </div>
+      </div>
+
+    </div><!-- /side-panel -->
+
+  </div><!-- /main -->
+
+  <!-- jsQR library for QR decoding from camera frames -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+  <script src="scanner.js"></script>
+</body>
+</html>

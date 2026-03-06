@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure ID — Login</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .login-header { margin-bottom: 32px; }
+    .login-header h1 { font-size: 1.75rem; margin-bottom: 6px; }
+    .login-header p  { color: var(--text-secondary); font-size: 0.92rem; }
+
+    .demo-hint {
+      background: rgba(0, 168, 255, 0.06);
+      border: 1px solid rgba(0, 168, 255, 0.15);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      margin-bottom: 24px;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
+    .demo-hint strong { color: var(--accent); display: block; margin-bottom: 6px; }
+    .demo-hint code {
+      font-family: var(--font-mono);
+      background: rgba(255,255,255,0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+    .demo-accounts { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      margin-bottom: 24px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--accent); }
+
+    .input-wrapper { position: relative; }
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      pointer-events: none;
+    }
+    .input-wrapper .form-input { padding-left: 44px; }
+
+    .toggle-pass {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 1rem;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+    .toggle-pass:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="container">
+      <a href="index.html" class="back-link">← Back</a>
+
+      <div class="card">
+        <div class="brand">
+          <div class="brand-icon">🔐</div>
+          <div>
+            <div class="brand-name">Secure <span>ID</span></div>
+            <div class="brand-tag">Campus Authentication</div>
+          </div>
+        </div>
+
+        <div class="login-header">
+          <h1>Welcome back</h1>
+          <p>Sign in to access your dynamic campus ID.</p>
+        </div>
+
+        <!-- Demo credentials hint -->
+        <div class="demo-hint">
+          <strong>🎭 Demo Accounts</strong>
+          <div class="demo-accounts">
+            <div><code>student@secureid.edu</code> / <code>student123</code></div>
+            <div><code>teacher@secureid.edu</code> / <code>teacher123</code></div>
+            <div><code>admin@secureid.edu</code> &nbsp;/ <code>admin123</code></div>
+          </div>
+        </div>
+
+        <!-- Error alert -->
+        <div class="alert alert-error" id="errorAlert">
+          <span>⚠️</span>
+          <span id="errorMsg">Invalid email or password.</span>
+        </div>
+
+        <!-- Login Form -->
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-wrapper">
+            <span class="input-icon">✉️</span>
+            <input
+              type="email"
+              id="emailInput"
+              class="form-input"
+              placeholder="you@secureid.edu"
+              autocomplete="email"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔑</span>
+            <input
+              type="password"
+              id="passwordInput"
+              class="form-input"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+            />
+            <button class="toggle-pass" id="togglePass" type="button" title="Show/hide password">👁</button>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" id="loginBtn" onclick="handleLogin()">
+          Sign In
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Redirect if already logged in
+    if (localStorage.getItem('secure_id_token')) {
+      window.location.href = 'dashboard.html';
+    }
+
+    // Password toggle
+    document.getElementById('togglePass').addEventListener('click', () => {
+      const input = document.getElementById('passwordInput');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    });
+
+    // Allow Enter key to submit
+    document.getElementById('passwordInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+    document.getElementById('emailInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    async function handleLogin() {
+      const email    = document.getElementById('emailInput').value.trim();
+      const password = document.getElementById('passwordInput').value;
+      const btn      = document.getElementById('loginBtn');
+      const errorAlert = document.getElementById('errorAlert');
+      const errorMsg   = document.getElementById('errorMsg');
+
+      // Hide previous error
+      errorAlert.classList.remove('show');
+
+      if (!email || !password) {
+        errorMsg.textContent = 'Please enter your email and password.';
+        errorAlert.classList.add('show');
+        return;
+      }
+
+      // Loading state
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Signing in...';
+
+      try {
+        const result = await SecureID.login(email, password);
+
+        if (result.success) {
+          // Brief success flash before redirect
+          btn.innerHTML = '✅ Redirecting...';
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 400);
+        } else {
+          errorMsg.textContent = result.error || 'Login failed. Please try again.';
+          errorAlert.classList.add('show');
+          btn.disabled = false;
+          btn.innerHTML = 'Sign In';
+        }
+      } catch (err) {
+        errorMsg.textContent = 'Cannot reach server. Make sure the backend is running.';
+        errorAlert.classList.add('show');
+        btn.disabled = false;
+        btn.innerHTML = 'Sign In';
+      }
+    }
+  </script>
+</body>
+</html>

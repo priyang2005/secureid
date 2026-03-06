@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure ID — Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- QR code generation library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    body { background: var(--bg-deep); }
+
+    /* ── Navbar ── */
+    .navbar { margin-bottom: 0; }
+    .nav-brand { display: flex; align-items: center; gap: 10px; }
+    .nav-brand .brand-icon { width: 34px; height: 34px; font-size: 16px; border-radius: 8px; }
+    .nav-brand .name { font-weight: 700; font-size: 1rem; }
+    .nav-brand .name span { color: var(--accent); }
+    .nav-actions { display: flex; align-items: center; gap: 12px; }
+    .nav-status { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* ── Dashboard layout ── */
+    .dashboard {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+
+    /* ── ID Card ── */
+    .id-card {
+      background: linear-gradient(135deg, #0d1e35 0%, #0a1628 100%);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-card), var(--shadow-glow);
+    }
+
+    .id-card::before {
+      content: '';
+      position: absolute;
+      top: -50%; right: -20%;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(0,168,255,0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .id-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+
+    .id-card-meta { font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono); letter-spacing: 0.08em; }
+    .id-card-meta .id-number { font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; }
+
+    .id-card-user {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .id-avatar {
+      width: 60px; height: 60px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #0055aa, #001a66);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+
+    .id-name { font-size: 1.2rem; font-weight: 700; }
+    .id-dept { font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px; }
+
+    /* ── QR Section ── */
+    .qr-section {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .qr-box {
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 30px rgba(0,168,255,0.15);
+    }
+
+    .qr-box #qrcode { display: block; }
+    .qr-box #qrcode canvas, .qr-box #qrcode img { border-radius: 4px; }
+
+    .qr-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.92);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: #555;
+      display: none;
+    }
+    .qr-overlay.show { display: flex; }
+    .qr-overlay .spinner-dark {
+      width: 24px; height: 24px;
+      border: 3px solid #ddd;
+      border-top-color: #0088cc;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .qr-info { flex: 1; }
+
+    .qr-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .timer-wrap { margin-bottom: 16px; }
+    .timer-label-text {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    .refresh-info {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* ── Security Info ── */
+    .security-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 0.73rem;
+      color: var(--text-secondary);
+    }
+
+    /* ── Usage Instructions ── */
+    .instructions {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-top: 20px;
+    }
+    .instructions h3 { font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .step-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .step-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+    }
+    .step-num {
+      width: 22px; height: 22px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    /* QR refresh animation */
+    @keyframes qr-fade-in {
+      from { opacity: 0.4; transform: scale(0.96); }
+      to   { opacity: 1;   transform: scale(1); }
+    }
+    .qr-box.refreshed { animation: qr-fade-in 0.35s ease-out; }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <div class="brand-icon" style="width:34px;height:34px;background:linear-gradient(135deg,#00a8ff,#0066cc);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;">🔐</div>
+      <div class="name">Secure <span>ID</span></div>
+    </div>
+    <div class="nav-actions">
+      <span class="nav-status"><span class="status-dot"></span>Active</span>
+      <button class="btn btn-ghost" onclick="logout()" style="padding:8px 16px;font-size:0.82rem;">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- Dashboard Content -->
+  <div class="dashboard">
+
+    <!-- ID Card -->
+    <div class="id-card">
+      <div class="id-card-header">
+        <div>
+          <div class="id-card-meta">CAMPUS SECURE ID</div>
+          <div class="id-card-meta id-number" id="userIdDisplay">ID: ...</div>
+        </div>
+        <div id="roleBadge"></div>
+      </div>
+
+      <div class="id-card-user">
+        <div class="id-avatar" id="userAvatar">👤</div>
+        <div>
+          <div class="id-name" id="userName">Loading...</div>
+          <div class="id-dept" id="userDept">—</div>
+        </div>
+      </div>
+
+      <!-- QR Code + Timer -->
+      <div class="qr-section">
+        <div class="qr-box" id="qrBox">
+          <div id="qrcode"></div>
+          <div class="qr-overlay" id="qrLoading">
+            <div class="spinner-dark"></div>
+            <span>Refreshing...</span>
+          </div>
+        </div>
+
+        <div class="qr-info">
+          <div class="qr-status">
+            <span class="status-dot"></span>
+            <span>Token active</span>
+          </div>
+
+          <div class="timer-wrap">
+            <div class="timer-label-text">Refreshes in</div>
+            <!-- SVG ring timer -->
+            <div class="timer-ring" id="timerRing">
+              <svg viewBox="0 0 72 72">
+                <circle class="track"    cx="36" cy="36" r="30"/>
+                <circle class="progress" id="timerArc" cx="36" cy="36" r="30"/>
+              </svg>
+              <div class="timer-number">
+                <span id="timerCount">30</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="refresh-info">Scan with the<br>scanner device</div>
+        </div>
+      </div>
+
+      <div class="security-chips">
+        <span class="chip">🔒 HMAC-SHA256</span>
+        <span class="chip">⏱ 30s window</span>
+        <span class="chip">🛡 Replay-safe</span>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="instructions">
+      <h3>How to use</h3>
+      <ul class="step-list">
+        <li><span class="step-num">1</span>Show this screen to campus security</li>
+        <li><span class="step-num">2</span>Security scans the QR code with the scanner device</li>
+        <li><span class="step-num">3</span>Access is granted or denied in real time</li>
+        <li><span class="step-num">4</span>Each QR code is valid for 30 seconds only</li>
+      </ul>
+    </div>
+
+  </div><!-- /dashboard -->
+
+  <script src="app.js"></script>
+  <script>
+    // ── Auth guard ─────────────────────────────────────────────────────────────
+    const session = SecureID.getSession();
+    if (!session) {
+      window.location.href = 'login.html';
+    }
+
+    // ── Populate user info ─────────────────────────────────────────────────────
+    const user = session.user;
+    document.getElementById('userName').textContent    = user.name;
+    document.getElementById('userDept').textContent    = user.department || user.role;
+    document.getElementById('userIdDisplay').textContent = 'ID: ' + user.id.substring(0, 8).toUpperCase();
+
+    // Avatar emoji by role
+    const avatarMap = { student: '🎓', teacher: '👨‍🏫', admin: '⚙️' };
+    document.getElementById('userAvatar').textContent  = avatarMap[user.role] || '👤';
+
+    // Role badge
+    const badge = document.createElement('span');
+    badge.className = `badge badge-${user.role}`;
+    badge.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+    document.getElementById('roleBadge').appendChild(badge);
+
+    // ── QR Generation ──────────────────────────────────────────────────────────
+    let qrInstance = null;
+
+    function renderQR(data) {
+      const container = document.getElementById('qrcode');
+      container.innerHTML = ''; // Clear previous QR
+
+      qrInstance = new QRCode(container, {
+        text:           data,
+        width:          160,
+        height:         160,
+        colorDark:      '#000000',
+        colorLight:     '#ffffff',
+        correctLevel:   QRCode.CorrectLevel.M
+      });
+
+      // Animate refresh
+      const box = document.getElementById('qrBox');
+      box.classList.remove('refreshed');
+      void box.offsetWidth; // trigger reflow
+      box.classList.add('refreshed');
+    }
+
+    async function fetchAndRenderQR() {
+      document.getElementById('qrLoading').classList.add('show');
+      try {
+        const result = await SecureID.getQRToken();
+        if (result.qrData) {
+          renderQR(result.qrData);
+        }
+      } catch (err) {
+        console.error('QR fetch error:', err);
+      } finally {
+        document.getElementById('qrLoading').classList.remove('show');
+      }
+    }
+
+    // ── Countdown Timer ────────────────────────────────────────────────────────
+    const ARC_LENGTH  = 188; // circumference of r=30 circle (approx 2π×30)
+    const TOTAL_SECS  = 30;
+
+    function updateTimer() {
+      const secondsInCycle = Math.floor(Date.now() / 1000) % TOTAL_SECS;
+      const remaining      = TOTAL_SECS - secondsInCycle;
+
+      // Update number
+      document.getElementById('timerCount').textContent = remaining;
+
+      // Update SVG arc
+      const progress = remaining / TOTAL_SECS;
+      const offset   = ARC_LENGTH - (progress * ARC_LENGTH);
+      const arc      = document.getElementById('timerArc');
+      arc.style.strokeDashoffset = offset;
+
+      // Urgent color when ≤ 5 seconds
+      arc.classList.toggle('urgent', remaining <= 5);
+
+      // Trigger QR refresh when timer resets to 30
+      if (remaining === TOTAL_SECS || remaining === 30) {
+        fetchAndRenderQR();
+      }
+    }
+
+    // Initial render
+    fetchAndRenderQR();
+
+    // Update timer every second
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    // ── Logout ─────────────────────────────────────────────────────────────────
+    function logout() {
+      SecureID.logout();
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>
