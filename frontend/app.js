@@ -10,9 +10,11 @@
 
 const SecureID = (() => {
   // ── Configuration ──────────────────────────────────────────────────────────
-  // When serving via the backend, use relative URLs.
-  // For standalone HTML dev, set this to 'http://localhost:3000'
-  const API_BASE = window.location.origin;
+  // ── RENDER DEPLOYMENT ───────────────────────────────────────────────────────
+  // After deploying to Render, paste your backend URL below, e.g.:
+  //   const API_BASE = 'https://secure-id-backend.onrender.com';
+  // If frontend is served by the SAME Render service, leave this as-is:
+  const API_BASE = window.SECURE_ID_API_URL || window.location.origin;
 
   const STORAGE_TOKEN = 'secure_id_token';
   const STORAGE_USER  = 'secure_id_user';

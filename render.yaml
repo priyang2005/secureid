@@ -1,0 +1,24 @@
+# render.yaml
+# Render deployment configuration for Secure ID
+# This file tells Render how to build and run the backend service.
+
+services:
+  - type: web
+    name: secure-id-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: SUPABASE_URL
+        sync: false        # You will set this in Render dashboard
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false        # You will set this in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true  # Render auto-generates a secure random value
+      - key: ENCRYPTION_SECRET
+        generateValue: true  # Render auto-generates a secure random value
